@@ -1,0 +1,127 @@
+package com.example.sugandha.client;
+
+import android.os.AsyncTask;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.text.Editable;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.net.UnknownHostException;
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+    private TextView tvServerMessage, txt;
+    private Button ON,OFF,Connect,check,f_off,f_on,f_check;
+    EditText IP;
+    Editable str;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        //tvServerMessage = (TextView) findViewById(R.id.tvs);
+        //txt=(TextView) findViewById(R.id.textView3) ;
+        ON=(Button) findViewById(R.id.button2) ;
+        OFF=(Button) findViewById(R.id.off);
+        Connect=(Button)findViewById(R.id.connect);
+        check=(Button)findViewById(R.id.button4);
+        f_on=(Button)findViewById(R.id.on);
+        f_off=(Button)findViewById(R.id.button3);
+        f_check=(Button)findViewById(R.id.chk);
+        IP=(EditText)findViewById(R.id.editText);
+
+        //Create an instance of AsyncTask
+
+        //Pass the server ip, port and client message to the AsyncTask
+        Connect.setOnClickListener(this);
+        ON.setOnClickListener(this);
+        OFF.setOnClickListener(this);
+        check.setOnClickListener(this);
+        f_on.setOnClickListener(this);
+        f_off.setOnClickListener(this);
+        f_check.setOnClickListener(this);
+
+    }
+
+    @Override
+    public void onClick(View view) {
+        ClientAsyncTask clientAST = new ClientAsyncTask();
+       switch (view.getId())
+       {
+           case R.id.connect:
+                str= IP.getText();
+               Toast.makeText(MainActivity.this,
+                       "The device is connected", Toast.LENGTH_LONG).show();
+           case R.id.button2 :
+               clientAST.execute(new String[] {String.valueOf(str), "80","H"});
+               break;
+           case R.id.off:
+               clientAST.execute(new String[] {String.valueOf(str), "80","L"});
+               break;
+           case R.id.button4:
+               Toast.makeText(MainActivity.this,
+                       "LED is On", Toast.LENGTH_SHORT).show();
+               clientAST.execute(new String[] {String.valueOf(str), "80","C"});
+               break;
+
+           case R.id.button3:
+               clientAST.execute(new String[] {String.valueOf(str), "80","O"});  //for off
+               break;
+           case R.id.on:
+               clientAST.execute(new String[] {String.valueOf(str), "80","N"});  //for on
+               break;
+           case R.id.chk:
+               Toast.makeText(MainActivity.this,
+                       "FAN is On", Toast.LENGTH_SHORT).show();
+
+               clientAST.execute(new String[] {String.valueOf(str), "80","S"});
+               tvServerMessage.setText("FAN is on");
+               break;
+       }
+    }
+
+    class ClientAsyncTask extends AsyncTask<String, Void, String> {
+        @Override
+        protected String doInBackground(String... params) {
+            String result = null;
+            try {
+                //Create a client socket and define internet address and the port of the server
+                Socket socket = new Socket(params[0],Integer.parseInt(params[1]));
+                //Get the input stream of the client socket
+                InputStream is = socket.getInputStream();
+                //Get the output stream of the client socket
+                PrintWriter out = new PrintWriter(socket.getOutputStream(),true);
+                //Write data to the output stream of the client socket
+                out.println(params[2]);
+                //Buffer the data coming from the input stream
+                BufferedReader br = new BufferedReader(
+                        new InputStreamReader(is));
+                //Read data in the input buffer
+                result = br.readLine();
+                //Close the client socket
+                socket.close();
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return result;
+        }
+        @Override
+        protected void onPostExecute(String s) {
+            //Write server message to the text view
+            //tvServerMessage.setText(s);
+        }
+    }
+
+}
